@@ -63,8 +63,41 @@ public class MyCommandController(GroceryDatabase db)
        
 
     }
-   
+
+
+    [HttpPut]
+    public void UpdateWithOptionals(GroceryItem item)
+    {
+        //lookup
+        var itemToUpdate = db.Groceries().FirstOrDefault(g => g.Id == item.Id) ?? throw new NotFoundException("");
+        if (item.Name != null)
+            itemToUpdate.Name = item.Name;
+        db.Update(itemToUpdate);
+        
+    }
+
+    [HttpDelete]
+    public int DeleteThing(Guid id)
+    {
+    //Lookup
+        var thing = db.Groceries()
+            .FirstOrDefault(g => g.Id == id) ?? throw new NotFoundException("Did not exist");
+        var now = DateTime.UtcNow;
+        var onlyDateNow = DateOnly.FromDateTime(now);
+        //validation logic: Is this before today????
+        if (thing.BestBefore < onlyDateNow)
+            throw new ValidationException("right now as after in time than the 'best before' date");
+        
     
+        
+        //Optional validation logic
+        if (thing.StockCount > 0)
+            throw new ValidationException("Cannot delete if stock is above 0");
+        
+        //Command
+        return db.Delete(thing);
+
+    }
 
     
 }
