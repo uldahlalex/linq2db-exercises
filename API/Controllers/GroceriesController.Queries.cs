@@ -12,10 +12,10 @@ public partial class GroceriesController(GroceryDatabase db) : ControllerBase
     /// Every item in the table, ordered by <see cref="GroceryItem.Name"/> ascending.
     /// </summary>
     /// <returns>All 32 seeded rows.</returns>
-    [HttpGet(nameof(GetAll))]
-    public List<GroceryItem> GetAll()
+    [HttpGet(nameof(GetAllGroceries))]
+    public List<GroceryItem> GetAllGroceries()
     {
-        throw new NotImplementedException();
+        return db.Groceries().ToList();
     }
 
     #region Tests: GetAll
@@ -25,13 +25,13 @@ public partial class GroceriesController(GroceryDatabase db) : ControllerBase
         [Fact]
         public void Returns_every_seeded_item()
         {
-            Assert.Equal(32, Controller.GetAll().Count);
+            Assert.Equal(32, Controller.GetAllGroceries().Count);
         }
 
         [Fact]
         public void Is_ordered_by_name()
         {
-            var names = Controller.GetAll().Select(x => x.Name).ToList();
+            var names = Controller.GetAllGroceries().Select(x => x.Name).ToList();
             Assert.Equal(names.OrderBy(x => x, StringComparer.Ordinal), names);
         }
     }

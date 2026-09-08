@@ -1,3 +1,4 @@
+using System.Runtime;
 using API.Testing;
 using Infa;
 using LinqToDB;
@@ -17,7 +18,18 @@ public partial class GroceriesController
     [HttpPost(nameof(Discontinue))]
     public void Discontinue([FromQuery] Guid id)
     {
-        throw new NotImplementedException();
+        
+        //discotinues a specific thing
+        var existing = db
+            .Groceries()
+            .Where(g => g.Id == id)
+            .FirstOrDefault();
+        if (existing == null)
+            throw new NotFoundException("that was not found");
+
+        existing.IsDiscontinued = true;
+        db.Update(existing);
+
     }
 
     #region Tests: Discontinue
@@ -60,7 +72,7 @@ public partial class GroceriesController
     /// <see cref="Discontinue"/>.
     /// </summary>
     /// <exception cref="NotFoundException">No row has that id.</exception>
-    [HttpPost(nameof(Reactivate))]
+    [HttpPatch(nameof(Reactivate))]
     public void Reactivate([FromQuery] Guid id)
     {
         throw new NotImplementedException();
@@ -98,7 +110,19 @@ public partial class GroceriesController
     [HttpPost(nameof(Restock))]
     public int Restock([FromQuery] string category, [FromQuery] int amount)
     {
-        throw new NotImplementedException();
+        //Validation
+        if (amount < 1)
+            throw new ValidationException("amount cannot be less than 1");
+        if (string.IsNullOrWhiteSpace(category))
+            throw new ValidationException("category cannot be whitespace");
+        
+        //Lookup and command
+        return db
+            .Groceries()
+            .Where(g => g.Category == category && g.IsDiscontinued == false)
+            .Set(g => g.StockCount, g => g.StockCount + amount)
+            .Update();
+
     }
 
     #region Tests: Restock
@@ -182,7 +206,15 @@ public partial class GroceriesController
     [HttpPost(nameof(ApplyDiscount))]
     public int ApplyDiscount([FromQuery] string category, [FromQuery] decimal percent)
     {
-        throw new NotImplementedException();
+        if (percent <= 0 || percent >= 100)
+            throw new ValidationException("not valid range");
+        if (string.IsNullOrWhiteSpace(category))
+            throw new ValidationException("non valid cat");
+        return db.Groceries()
+            .Where(g => !g.IsDiscontinued && (g.DiscountPercent == null || g.DiscountPercent == 0) && g.Category == category)
+            .Set(g => g.DiscountPercent, i => percent)
+            .Update();
+        
     }
 
     #region Tests: ApplyDiscount
@@ -216,14 +248,17 @@ public partial class GroceriesController
 
     /// <summary>
     /// Housekeeping: drops every row that is past its best-before date <em>and</em> has no stock
-    /// left. An expired item still sitting on the shelf is a problem for a human, not for a
-    /// <c>DELETE</c>.
+    /// left. An expired item still sitting on the shelf is a problem for a human, not for a 
+    /// <c>DELETE</c> operation.
     /// </summary>
     /// <returns>How many rows were removed. 3 on fresh seed data.</returns>
     [HttpDelete(nameof(DeleteExpired))]
     public int DeleteExpired()
     {
-        throw new NotImplementedException();
+        //Lookup and command
+        return db.Groceries()
+            .Where(g => g.StockCount == 0 && g.BestBefore < DateOnly.FromDateTime(DateTime.Now))
+            .Delete();
     }
 
     #region Tests: DeleteExpired
@@ -266,7 +301,10 @@ public partial class GroceriesController
     [HttpDelete(nameof(Delete))]
     public void Delete([FromQuery] Guid id)
     {
-        throw new NotImplementedException();
+        var g = db.Groceries().FirstOrDefault(g => g.Id == id) ?? throw new NotFoundException("");
+        if (g.StockCount > 0)
+            throw new ConflictException("");
+        db.Delete(g);
     }
 
     #region Tests: Delete
@@ -328,7 +366,29 @@ public partial class GroceriesController
     [HttpPost(nameof(Create))]
     public Guid Create([FromBody] GroceryItem item)
     {
-        throw new NotImplementedException();
+        //Validation rules
+        if (String.IsNullOrWhiteSpace(item.Name))
+            throw new ValidationException("Cannot be whitesapce");
+
+        if (item.Barcode != null && item.Barcode.Length != 13)
+            throw new ValidationException("barcode must be 13 chars if not null");
+        
+        //Object instatiation
+        var newObject = new GroceryItem()
+        {
+            //passed by the client
+            Brand = item.Brand,
+            Name = item.Name,
+            
+            //determined by the server
+            CreatedAtUtc = DateTime.UtcNow,
+            Id = Guid.NewGuid(),
+            TimesPurchased = 0
+        };
+        //Command
+        db.Insert(newObject);
+        //Returning
+        return newObject.Id;
     }
 
     #region Tests: Create
@@ -470,6 +530,7 @@ public partial class GroceriesController
 
     #endregion
 
+    
     /// <summary>
     /// Registers a sale: stock goes down by the quantity, the purchase counter goes up by it, and
     /// <see cref="GroceryItem.LastPurchasedAtUtc"/> is set to now — all three in a single
@@ -561,7 +622,27 @@ public partial class GroceriesController
     [HttpPut(nameof(Update))]
     public void Update([FromBody] GroceryItem item)
     {
-        throw new NotImplementedException();
+        var existing = db.Groceries().FirstOrDefault(g => g.Id == item.Id) ??
+                       throw new NotFoundException("that did not exist");
+
+        //Id, creation, purchased times and last purchase timestamp never updated
+        existing.StockCount = item.StockCount;
+        existing.Barcode = item.Barcode ?? existing.Barcode;
+        existing.Category = item.Category;
+        existing.Name = item.Name;
+        existing.RatingAvg = item.RatingAvg ?? existing.RatingAvg;
+        existing.BestBefore = item.BestBefore ?? existing.BestBefore;
+        existing.PriceDkk = item.PriceDkk;
+        existing.PriceDkk = (decimal)item.WeightKg;
+        existing.Brand = item.Brand;
+        existing.IsOrganic = item.IsOrganic;
+        existing.Storage = item.Storage;
+        existing.PreparationTime = item.PreparationTime;
+        existing.SuppliedBy = item.SuppliedBy;
+        existing.Tags = item.Tags;
+        existing.CreatedAtUtc = existing.CreatedAtUtc;
+        
+        db.Update(item);
     }
 
     #region Tests: Update
@@ -677,7 +758,15 @@ public partial class GroceriesController
     [HttpPut(nameof(Upsert))]
     public Guid Upsert([FromBody] GroceryItem item)
     {
-        throw new NotImplementedException();
+        try
+        {
+            throw new AmbiguousImplementationException("SQL exception occured somewhere in library code");
+        }
+        catch
+        {
+            throw new ValidationException("Some error occured");
+        }
+        
     }
 
     #region Tests: Upsert

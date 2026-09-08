@@ -35,6 +35,7 @@ public class MyAwesomeCrudController(GroceryDatabase db) : ControllerBase
     [HttpPut(nameof(UpdateThing))]
     public GroceryItem UpdateThing(Guid id, decimal newDiscount)
     {
+      
         //Lookup
         var existing = db.Groceries()
                            .FirstOrDefault(g => g.Id == id)
@@ -42,6 +43,8 @@ public class MyAwesomeCrudController(GroceryDatabase db) : ControllerBase
 
         if (newDiscount < 0)
             throw new ValidationException("dicout cannot be less than 0");
+        
+
         
         existing.DiscountPercent = newDiscount;
         
@@ -54,10 +57,26 @@ public class MyAwesomeCrudController(GroceryDatabase db) : ControllerBase
 
     public void UpdateManyThings()
     {
+        
         db.Groceries()
             .Where(g => g.Brand == "Thing")
             .Set(g => g.DiscountPercent, g => 50)
             .Update();
+    }
+
+    [HttpDelete(nameof(DeleteThing))]
+    public void DeleteThing(Guid id)
+    {
+        
+        
+       var existing = db
+           .Groceries()
+           .FirstOrDefault(g => g.Id == id) ?? throw new NotFoundException("Not found");
+
+       if (existing.StockCount != 0)
+           throw new ValidationException("cannot delete if stock exists");
+
+       db.Delete(existing);
     }
 
 

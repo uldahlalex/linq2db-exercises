@@ -1,5 +1,6 @@
-using LinqToDB;
+using System.ComponentModel.DataAnnotations;
 using LinqToDB.Mapping;
+using DataType = LinqToDB.DataType;
 
 namespace Infa;
 
@@ -30,7 +31,7 @@ public class GroceryItem
 
     [Column] public decimal PriceDkk { get; set; }
     [Column] public decimal? DiscountPercent { get; set; }
-    [Column] public int StockCount { get; set; }
+    [Column] [Range(1, Int32.MaxValue)] public int StockCount { get; set; }
     [Column] public int TimesPurchased { get; set; }
     [Column] public double WeightKg { get; set; }
     [Column] public double? RatingAvg { get; set; }
