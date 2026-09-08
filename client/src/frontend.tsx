@@ -8,10 +8,12 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
+import {Toaster} from "react-hot-toast";
 
 const elem = document.getElementById("root")!;
 const app = (
   <StrictMode>
+      <Toaster />
     <App />
   </StrictMode>
 );
