@@ -1,4 +1,5 @@
 using System.Runtime;
+using System.Security.Authentication;
 using API.Testing;
 using Infa;
 using LinqToDB;
@@ -75,7 +76,6 @@ public partial class GroceriesController
     [HttpPatch(nameof(Reactivate))]
     public void Reactivate([FromQuery] Guid id)
     {
-        throw new NotImplementedException();
     }
 
     #region Tests: Reactivate

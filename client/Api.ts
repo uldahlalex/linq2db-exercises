@@ -32,14 +32,14 @@ export enum StorageType {
 
 export interface GroceryItem {
   /** @format guid */
-  id: string;
-  name: string;
+  id?: string;
+  name?: string;
   brand?: string | null;
-  category: string;
+  category?: string;
   tags?: string | null;
   barcode?: string | null;
   /** @format decimal */
-  priceDkk: number;
+  priceDkk?: number;
   /** @format decimal */
   discountPercent?: number | null;
   /**
@@ -47,19 +47,19 @@ export interface GroceryItem {
    * @min 1
    * @max 2147483647
    */
-  stockCount: number;
+  stockCount?: number;
   /** @format int32 */
-  timesPurchased: number;
+  timesPurchased?: number;
   /** @format double */
-  weightKg: number;
+  weightKg?: number;
   /** @format double */
   ratingAvg?: number | null;
-  isOrganic: boolean;
-  isDiscontinued: boolean;
-  storage: StorageType;
-  suppliedBy: Supplier;
+  isOrganic?: boolean;
+  isDiscontinued?: boolean;
+  storage?: StorageType;
+  suppliedBy?: Supplier;
   /** @format date-time */
-  createdAtUtc: string;
+  createdAtUtc?: string;
   /** @format date-time */
   lastPurchasedAtUtc?: string | null;
   /** @format date */
@@ -680,17 +680,17 @@ export class Api<
         ...params,
       }),
   };
-  getAllGroceries = {
+  getAllMyGroceries = {
     /**
      * No description
      *
      * @tags Groceries
-     * @name GroceriesGetAllGroceries
-     * @request GET:/GetAllGroceries
+     * @name GroceriesGetAllMyGroceries
+     * @request GET:/GetAllMyGroceries
      */
-    groceriesGetAllGroceries: (params: RequestParams = {}) =>
+    groceriesGetAllMyGroceries: (params: RequestParams = {}) =>
       this.request<GroceryItem[], any>({
-        path: `/GetAllGroceries`,
+        path: `/GetAllMyGroceries`,
         method: "GET",
         format: "json",
         ...params,

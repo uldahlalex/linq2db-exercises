@@ -12,8 +12,8 @@ public partial class GroceriesController(GroceryDatabase db) : ControllerBase
     /// Every item in the table, ordered by <see cref="GroceryItem.Name"/> ascending.
     /// </summary>
     /// <returns>All 32 seeded rows.</returns>
-    [HttpGet(nameof(GetAllGroceries))]
-    public List<GroceryItem> GetAllGroceries()
+    [HttpGet(nameof(GetAllMyGroceries))]
+    public List<GroceryItem> GetAllMyGroceries()
     {
         return db.Groceries().ToList();
     }
@@ -25,13 +25,13 @@ public partial class GroceriesController(GroceryDatabase db) : ControllerBase
         [Fact]
         public void Returns_every_seeded_item()
         {
-            Assert.Equal(32, Controller.GetAllGroceries().Count);
+            Assert.Equal(32, Controller.GetAllMyGroceries().Count);
         }
 
         [Fact]
         public void Is_ordered_by_name()
         {
-            var names = Controller.GetAllGroceries().Select(x => x.Name).ToList();
+            var names = Controller.GetAllMyGroceries().Select(x => x.Name).ToList();
             Assert.Equal(names.OrderBy(x => x, StringComparer.Ordinal), names);
         }
     }

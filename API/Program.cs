@@ -13,11 +13,15 @@ builder.Services.AddScoped<GroceryDatabase>();
 builder.Services.AddControllers()
     .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
-builder.Services.AddOpenApiDocument();
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<MyCustomExceptionHandler>();
+
+builder.Services.AddOpenApiDocument(settings => settings.SchemaSettings.SchemaProcessors.Add(new RequireNotNullableSchemaProcessor()));
+
 
 builder.Services.AddCors();
-builder.Services.AddProblemDetails();
-builder.Services.AddExceptionHandler<MyAwesomeExceptionHandler>();
+
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -26,22 +30,31 @@ using (var scope = app.Services.CreateScope())
     GrocerySeed.EnsureSeeded(db);
 }
 
-app.UseCors(_ => _.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin().SetIsOriginAllowed(_ => true));
 app.UseExceptionHandler();
+app.UseCors(_ => _.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin().SetIsOriginAllowed(_ => true));
 app.UseOpenApi();
 app.UseSwaggerUi();
 app.MapControllers();
 app.Run();
 
-public class MyAwesomeExceptionHandler : IExceptionHandler
+public class MyException : Exception;
+
+public class MyCustomExceptionHandler : IExceptionHandler
 {
-    public ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
+    public ValueTask<bool> TryHandleAsync(HttpContext httpContext,
+        Exception exception, 
+        CancellationToken cancellationToken)
     {
+     
+        if (exception is ValidationException)
+        {
+            httpContext.Response.StatusCode = 401;
+        }
         httpContext.Response.WriteAsJsonAsync(new ProblemDetails()
         {
             Title = exception.Message
         });
 
-        return new ValueTask<bool>();
+        return default;
     }
 }

@@ -11,31 +11,32 @@ const api = new Api();
 
 export function App() {
 
-    const [groceries, setgroceris] = useState<GroceryItem[]>([])
+    const [grocies, setGroceries] = useState<GroceryItem[]>([])
 
     useEffect(() => {
-        api.getAllGroceries.groceriesGetAllGroceries().then(result => {
-            setgroceris(result.data)
+
+        api.getAllMyGroceries.groceriesGetAllMyGroceries()
+            .then(r => {
+            setGroceries(r.data)
         })
-
-
     }, []);
 
   return (
     <div className="app">
+
         {
-            JSON.stringify(groceries)
+            JSON.stringify(grocies)
         }
 
         <button onClick={async () => {
-
             try {
-                const result = await api.create.groceriesCreate({
-                })
+                 await api.upsert.groceriesUpsert({})
+                 //Did not throw: means status code 200-someting
             } catch (e: any) {
+                //we got a status code 400 or 500-something
                 toast(e.error.title)
             }
-        }}>Click me to trigger an error</button>
+        }}>Click this to trigger a server error and get appropriate response handling</button>
     </div>
   );
 }
