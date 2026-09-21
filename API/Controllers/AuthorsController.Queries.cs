@@ -107,7 +107,10 @@ public partial class AuthorsController(LibraryDatabase db) : ControllerBase
     [HttpGet(nameof(GetForBook))]
     public List<AuthorResponse> GetForBook([FromQuery] string bookId)
     {
-        throw new NotImplementedException();
+        var book = db.Books().LoadWith(b => b.Authors)
+            .FirstOrDefault(b => b.Id == bookId) ?? throw new KeyNotFoundException();
+
+        return book.Authors.Select(a => new AuthorResponse(a)).ToList();
 
     }
 
@@ -116,7 +119,14 @@ public partial class AuthorsController(LibraryDatabase db) : ControllerBase
     [HttpGet(nameof(GetWithoutBooks))]
     public List<AuthorResponse> GetWithoutBooks()
     {
-        throw new NotImplementedException();
+        //step 1: Lookup
+        IQueryable<Author> query = db.Authors().LoadWith(a => a.Books);
+        
+        //step 2: Filter
+        query = query.Where(a => !a.Books.Any());
+
+        //Step 3: Map / projection (send the right object back)
+        return query.Select(a => new AuthorResponse(a)).ToList();
 
     }
 
