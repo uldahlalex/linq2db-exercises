@@ -8,8 +8,9 @@ import {
   type AuthorsGetFilteredParams,
   type AuthorUpdateRequest,
 } from "../api/Api.ts";
+import { api } from "./AuthorBooksPage.tsx";
 
-const api = new Api();
+
 
 // Ids from the seed data, so every block below can be run on its own.
 const seedAuthor = "1";

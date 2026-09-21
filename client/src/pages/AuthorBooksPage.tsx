@@ -1,8 +1,7 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { Api } from "../api/Api.ts";
-
-const api = new Api();
+export const api = new Api({baseUrl: process.env.NODE_ENV === "production" ? "https://linq2db-exercises.fly.dev" : "http://localhost:5234"});
 
 // Ids from the seed data: Rosalind Kemp has no books and "Unwritten Kingdoms" has no authors.
 const seedAuthor = "11";
