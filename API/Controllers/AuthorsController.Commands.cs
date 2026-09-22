@@ -67,8 +67,8 @@ public partial class AuthorsController
         };
         if (request.Bio != null)
             a.Bio = request.Bio;
-        // if (request.FirstName!= null)
-        //     a.FirstName = request.FirstName;
+        if (request.FirstName!= null)
+            a.FirstName = request.FirstName;
         if (request.LastName != null)
             a.LastName = request.LastName;
         if (request.BirthDate != null)
