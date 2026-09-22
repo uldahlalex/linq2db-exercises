@@ -24,5 +24,5 @@ public partial record BookUpdateRequest
 }
 
 /// <summary>The whole mutable row: every property is required as the entity requires it, and a null one clears the column.</summary>
-[Facet(typeof(Book), [nameof(Book.CreatedAtUtc), nameof(Book.Authors)], GenerateToSource = true)]
+[Facet(typeof(Book), [nameof(Book.CreatedAtUtc), nameof(Book.Authors)], GenerateToSource = false)]
 public partial record BookReplaceRequest;

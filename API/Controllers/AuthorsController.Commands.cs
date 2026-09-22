@@ -120,12 +120,7 @@ public partial class AuthorsController
     [HttpDelete(nameof(Delete))]
     public void Delete([FromQuery] string id)
     {
-        var author = db.Authors()
-            .LoadWith(a => a.Books)
-            .FirstOrDefault(a => a.Id == id) ?? throw new KeyNotFoundException();
-        if (author.Books.Any())
-            throw new InvalidOperationException();
-        db.Delete(author);
+        throw new NotImplementedException();
     }
 
     #region Tests: Create
