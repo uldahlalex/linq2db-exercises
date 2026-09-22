@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using API.Dtos;
+using Facet.Extensions;
 using Infa;
 using LinqToDB;
 using Microsoft.AspNetCore.Mvc;
@@ -9,6 +10,7 @@ namespace API.Controllers;
 
 public partial class AuthorsController
 {
+    
     /// <summary>Adds a new author to the catalogue.</summary>
     /// <remarks>
     ///     The one validation rule, a <see cref="ValidationException" />: first and last name are
@@ -18,7 +20,13 @@ public partial class AuthorsController
     [HttpPost(nameof(Create))]
     public AuthorResponse Create([FromBody] AuthorCreateRequest request)
     {
-        throw new NotImplementedException();
+        if (string.IsNullOrWhiteSpace(request.FirstName) || string.IsNullOrWhiteSpace(request.LastName))
+            throw new ValidationException();
+        var a = request.ToSource<Author>();
+        a.CreatedAtUtc = DateTime.UtcNow;
+        a.Id = Guid.NewGuid().ToString();
+        db.Insert(a);
+        return new AuthorResponse(a);
     }
 
     /// <summary>
@@ -42,7 +50,29 @@ public partial class AuthorsController
     [HttpPatch(nameof(Update))]
     public AuthorResponse Update([FromBody] AuthorUpdateRequest request)
     {
-        throw new NotImplementedException();
+        if (string.IsNullOrWhiteSpace(request.FirstName)
+           )
+            throw new ValidationException();
+
+        var a = db.Authors().FirstOrDefault(a => a.Id == request.Id) ?? throw new KeyNotFoundException();
+        if (request.Bio != null)
+            a.Bio = request.Bio;
+        if (request.FirstName != null)
+            a.FirstName = request.FirstName;
+        if (request.LastName != null)
+            a.LastName = request.LastName;
+        if (request.BirthDate != null)
+            a.BirthDate = request.BirthDate;
+        if (request.FirstName != null)
+            a.FirstName = request.FirstName;
+        if (request.LastName != null)
+            a.LastName = request.LastName;
+        if (request.Nationality != null)
+            a.Nationality = request.Nationality;
+        if (request.Website != null)
+            a.Website = request.Website;
+        db.Update(a);
+        return new AuthorResponse(a);
     }
 
     /// <summary>
@@ -62,7 +92,12 @@ public partial class AuthorsController
     [HttpPut(nameof(Replace))]
     public AuthorResponse Replace([FromBody] AuthorReplaceRequest request)
     {
-        throw new NotImplementedException();
+        if (string.IsNullOrWhiteSpace(request.FirstName) || string.IsNullOrWhiteSpace(request.LastName))
+            throw new ValidationException();
+        _ = db.Authors().FirstOrDefault(a => a.Id == request.Id) ?? throw new KeyNotFoundException();
+        var a = request.ToSource<Author>();
+        db.Update(a);
+        return new AuthorResponse(a);
     }
 
     /// <summary>Removes an author for good — but only once nothing they wrote is still credited to them.</summary>
@@ -71,7 +106,10 @@ public partial class AuthorsController
     [HttpDelete(nameof(Delete))]
     public void Delete([FromQuery] string id)
     {
-        throw new NotImplementedException();
+        var a = db.Authors().LoadWith(a => a.Books).FirstOrDefault(a => a.Id == id) ?? throw new KeyNotFoundException();
+        if (a.Books.Any())
+            throw new InvalidOperationException();
+        db.Delete(a);
     }
 
     #region Tests: Create

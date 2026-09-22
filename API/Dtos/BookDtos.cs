@@ -3,7 +3,7 @@ using Infa;
 
 namespace API.Dtos;
 
-[Facet(typeof(Book), [nameof(Book.Authors)], GenerateToSource = false)]
+[Facet(typeof(Book), [nameof(Book.Authors)], GenerateToSource = true)]
 public partial record BookResponse;
 
 /// <summary>
@@ -17,12 +17,12 @@ public partial record BookCreateRequest;
 [Facet(typeof(Book),
     [nameof(Book.Id), nameof(Book.CreatedAtUtc), nameof(Book.Authors)],
     NullableProperties = true,
-    GenerateToSource = false)]
+    GenerateToSource = true)]
 public partial record BookUpdateRequest
 {
     public string Id { get; init; } = "";
 }
 
 /// <summary>The whole mutable row: every property is required as the entity requires it, and a null one clears the column.</summary>
-[Facet(typeof(Book), [nameof(Book.CreatedAtUtc), nameof(Book.Authors)], GenerateToSource = false)]
+[Facet(typeof(Book), [nameof(Book.CreatedAtUtc), nameof(Book.Authors)], GenerateToSource = true)]
 public partial record BookReplaceRequest;
