@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 using API.Dtos;
+using Facet.Extensions;
 using Infa;
 using LinqToDB;
 using Microsoft.AspNetCore.Mvc;
@@ -18,7 +20,19 @@ public partial class AuthorsController
     [HttpPost(nameof(Create))]
     public AuthorResponse Create([FromBody] AuthorCreateRequest request)
     {
-        throw new NotImplementedException();
+        //1) "Unhappy path": everything that fails should fail first
+        if (string.IsNullOrWhiteSpace(request.FirstName) || string.IsNullOrWhiteSpace(request.LastName))
+            throw new ValidationException("name cannot be whitespace");
+        
+        //2) Object instantiatoin
+        var author = request.ToSource<Author>();
+        author.Id = Guid.NewGuid().ToString();
+        author.CreatedAtUtc = DateTime.UtcNow;
+        
+        //3. mutation
+        db.Insert(author);
+        //4. map and return
+        return new AuthorResponse(author);
     }
 
     /// <summary>
@@ -42,7 +56,30 @@ public partial class AuthorsController
     [HttpPatch(nameof(Update))]
     public AuthorResponse Update([FromBody] AuthorUpdateRequest request)
     {
-        throw new NotImplementedException();
+        if (string.IsNullOrWhiteSpace(request.FirstName))
+            throw new ValidationException();
+        _ = db.Authors().FirstOrDefault(a => a.Id == request.Id) ??
+            throw new KeyNotFoundException("author didnt exist");
+
+        var a = new Author()
+        {
+            FirstName = request.FirstName
+        };
+        if (request.Bio != null)
+            a.Bio = request.Bio;
+        // if (request.FirstName!= null)
+        //     a.FirstName = request.FirstName;
+        if (request.LastName != null)
+            a.LastName = request.LastName;
+        if (request.BirthDate != null)
+            a.BirthDate = request.BirthDate;
+        if (request.Nationality != null)
+            a.Nationality = request.Nationality;
+        if (request.Website != null)
+            a.Website = request.Website;
+        db.Update(a);
+        Console.WriteLine(JsonSerializer.Serialize(a));
+        return new AuthorResponse(a);
     }
 
     /// <summary>
@@ -62,7 +99,19 @@ public partial class AuthorsController
     [HttpPut(nameof(Replace))]
     public AuthorResponse Replace([FromBody] AuthorReplaceRequest request)
     {
-        throw new NotImplementedException();
+        //validering
+        if (string.IsNullOrWhiteSpace(request.FirstName))
+            throw new ValidationException();
+        _ = db.Authors().FirstOrDefault(a => a.Id == request.Id) ??
+            throw new KeyNotFoundException("author didnt exist");
+        
+        //objekt instatiering
+        var author = request.ToSource<Author>();
+        
+        //mutation
+        db.Update(author);
+        //return mapped object
+        return new AuthorResponse(author);
     }
 
     /// <summary>Removes an author for good — but only once nothing they wrote is still credited to them.</summary>
