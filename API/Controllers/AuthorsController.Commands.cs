@@ -61,13 +61,10 @@ public partial class AuthorsController
         _ = db.Authors().FirstOrDefault(a => a.Id == request.Id) ??
             throw new KeyNotFoundException("author didnt exist");
 
-        var a = new Author()
-        {
-            FirstName = request.FirstName
-        };
+        var a = db.Authors().FirstOrDefault(a => a.Id == request.Id) ?? throw new ValidationException();
         if (request.Bio != null)
             a.Bio = request.Bio;
-        if (request.FirstName!= null)
+        if (request.FirstName != null)
             a.FirstName = request.FirstName;
         if (request.LastName != null)
             a.LastName = request.LastName;
